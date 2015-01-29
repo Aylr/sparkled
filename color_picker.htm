@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Color Picker v0.1</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+
+    <!-- Pick-A-Color -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/pick-a-color-1.2.3.min.css">
+    <style type="text/css">
+      div.settings{margin-bottom: 30px;}
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+      <h1>Color Picker v0.1</h1>
+
+      
+        <div class="row settings">
+          <form class="form-inline" id="settings">
+            <div class="form-group">
+              <label for="speed">Speed</label>
+              <input id="speed" type="text" class="form-control" value="50" />
+            </div>
+            <div class="form-group">
+              <label for="brightness">Brightness</label>
+              <input id="brightness" type="text" class="form-control" value="100" />
+            </div>
+              <input type="button" id="saveSettings" class="btn btn-default" value="Save Settings" />
+          </form>
+        </div>
+
+        <div role="tabpanel">
+          <!-- Nav tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation"><a href="#solid" aria-controls="solid" role="tab" data-toggle="tab" class="solid">solid</a></li>
+            <li role="presentation"><a href="#individual" aria-controls="individual" role="tab" data-toggle="tab"  class="individual">individual</a></li>
+            <li role="presentation" class="active"><a href="#animation" aria-controls="animation" role="tab" data-toggle="tab" class="animation">Animation</a></li>
+            <li role="presentation"><a href="#random" aria-controls="random" role="tab" data-toggle="tab"  class="random">Random</a></li>
+            <li role="presentation"><a href="#weather" aria-controls="weather" role="tab" data-toggle="tab" class="weather">Weather</a></li>
+            <li role="presentation"><a href="#api" aria-controls="api" role="tab" data-toggle="tab" class="api">API</a></li>
+
+          </ul>
+
+          <!-- Content tabs -->
+          <div class="tab-content">
+
+            <div role="tabpenel" class="tab-pane active" id="animation">
+              <h2>Animation</h2>
+              <p>each row is one frame of animation</p>
+
+              <table>
+                <tr class="frame">
+                  <td><em>1</em> <input type="button" class="btn btn-danger btn-xs deleteRow" value="delete" /></td>
+                  <td>
+                    <form class="form-inline">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                      <input type="button" class="btn btn-default" value="Save" />
+                    </form>
+                  </td>
+                </tr>
+
+              </table>
+              <input type="button" class="btn btn-primary" id="addRow" value=" + " />
+            </div>
+
+            <div role="tabpenel" class="tab-pane" id="random">
+              <h2>Random</h2>
+              <p>is this random twinkling? random fading?</p>
+
+              <input type="text" value="000"  class="pick-a-color form-control"><input type="button" class="btn btn-default" value="Save" />
+            </div>
+
+            <div role="tabpenel" class="tab-pane" id="individual">
+              <h2>individual</h2>
+              <p>pick and choose each LED</p>
+              <form class="form-inline">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="text" value="#cfcfcf"  class="pick-a-color form-control">
+                <input type="button" class="btn btn-default" value="Save" />
+              </form>
+            </div>
+
+            <div role="tabpenel" class="tab-pane" id="solid">
+              <h2>Solid</h2>
+              <p>one color to rule them all</p>
+              
+                <input type="text" value="000"  class="pick-a-color form-control">
+                <input type="button" class="btn btn-default" value="Save" />
+             
+            </div>
+
+            <div role="tabpenel" class="tab-pane" id="weather">
+              <h2>Weather</h2>
+              <p>Part of the sculpture should be mapped to temperature, part to wind direction (with animation), part to conditions</p>
+              <div class="form-group"
+                <label for="zipcode">Zipcode</label>
+                <input type="text" name="zipcode" id="zipcode" />
+              </div>
+                <input type="button" id="getConditions" class="btn btn-default" value="Get Conditions" />
+            </div>
+
+            <div role="tabpenel" class="tab-pane" id="api">
+              <h2>API</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/tinycolor-0.9.15.min.js"></script>
+    <script src="js/pick-a-color-1.2.3.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+      console.log("DOM ready");
+
+
+      $(".pick-a-color").pickAColor({
+        showSpectrum            : true,
+        showSavedColors         : true,
+        saveColorsPerElement    : false,
+        fadeMenuToggle          : false,
+        showHexInput            : false,
+        showBasicColors         : false,
+        allowBlank              : false,
+        inlineDropdown          : true
+      });
+
+    
+      $("div#weather #getConditions").click(function(){
+        $.ajax({
+          url : "http://api.wunderground.com/api/eb86628edb8791c9/geolookup/conditions/q/UT/Salt_Lake_City.json",
+          dataType : "jsonp",
+          success : function(parsed_json) {
+          var location = parsed_json['location']['city'];
+          var temp_f = parsed_json['current_observation']['temp_f'];
+          console.log("Current temperature in " + location + " is: " + temp_f);
+          $("div#weather").append("Current temperature in " + location + " is: " + temp_f);
+          }
+        });
+      });
+
+
+      // delete a row
+      $("input.deleteRow").click(function(){
+        $(this).parent().parent().remove();
+      });
+
+    
+    
+
+    $("input#addRow").click(function(){
+      //copy last row and insert on bottom of table
+      $($("div#animation tr.frame").last()).clone(true).appendTo("div#animation table");
+    });
+  });
+    </script>
+  </body>
+</html>
