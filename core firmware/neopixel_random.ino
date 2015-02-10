@@ -15,46 +15,56 @@
 #define PIXEL_TYPE WS2812B
 
 unsigned char currentColors[PIXEL_COUNT][3];
+unsigned char initialColors[PIXEL_COUNT][3];
 unsigned char finalColors[PIXEL_COUNT][3];
-
-
-
 
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
 void setup() 
 {
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+    strip.begin();
+    strip.show(); // Initialize all pixels to 'off'
+    
+    //start with some random initial colors
+    uint16_t i;
+     for(i=0;i<strip.numPixels();i++){
+        initialColors[i][0] = random(256);
+        initialColors[i][1] = random(256);
+        initialColors[i][2] = random(256);
+        
+        currentColors[i][0] = initialColors[i][0];
+        currentColors[i][1] = initialColors[i][1];
+        currentColors[i][2] = initialColors[i][2];
+    }
+    
+    setStripColors();           //set the strip colors
+    strip.show();               //show the colors
 }
 
 void loop() 
 {
-
-    //strip.setPixelColor(0,255,255,255);
+    getRandomFinalColors();   //prepare the next keyframe colors (finalColors)
+    fade(100);                //fade from the inital colors to the final colors
+    
+    //setStripColors();
     //strip.show();
-    //delay(500);
+    //delay(1000);
     
-
     //rainbow(10);
-    randomNextColors();        //get the next colors
     
-    randomize(random(10,5000));
+    //getRandomFinalColors();
+    //fade(1000);
+    
 
+    //randomize(random(10,5000));
 }
 
 
-void fade (uint16_t wait){
+void fade(uint16_t wait){
     uint16_t i;
-    unsigned char deltaColorIncrement[strip.numPixels][3];
+    unsigned char deltaColorIncrement[strip.numPixels()][3];
     int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
-    
-    //initialColors = [[255,255,255],[100,100,100]];          //note get the from the strip or global variable
-    //finalColors = [[100,100,100],[255,255,255]];            //get this from somewhere.
-    //deltaColorIncrement = currentColors = [[0,0,0],[0,0,0]];
-    
-    
     
     //loop through and find the increment for each of the n transition frames
     for(i=0;i<strip.numPixels();i++){
@@ -63,7 +73,7 @@ void fade (uint16_t wait){
         deltaColorIncrement[i][2] = (finalColors[i][2] - initialColors[i][2])/transitionFrames;
     }
     
-    currentColors = initialColors;                  //start with the initialColors
+    //currentColors = initialColors;                  //start with the initialColors
     
     for(i=0;i<transitionFrames;i++){                //for each frame
     
@@ -71,9 +81,9 @@ void fade (uint16_t wait){
             currentColors[i][0] = currentColors[i][0] + deltaColorIncrement[i][0];          //set new frame r
             currentColors[i][1] = currentColors[i][1] + deltaColorIncrement[i][1];          //set new frame g
             currentColors[i][2] = currentColors[i][2] + deltaColorIncrement[i][2];          //set new frame b
-            
-            strip.setPixelColor(i,currentColors[i][0],currentColors[i][1],currentColors[i][2]);  //set each pixel color
         }
+        
+        setStripColors();        //set the colors of the entire strip
         strip.show();
         delay(wait);
     }
@@ -84,7 +94,6 @@ void randomize(uint32_t wait){
     uint16_t i;
     
     for(i=0;i<strip.numPixels();i++){
-        //currentColors[i] = [random(256),random(256),random(256)];
         currentColors[i][0] = random(256);
         currentColors[i][1] = random(256);
         currentColors[i][2] = random(256);
@@ -95,21 +104,21 @@ void randomize(uint32_t wait){
     delay(wait);
 }
 
-void randomNextColors(){
+void getRandomFinalColors(){
     uint16_t i;
     
     for(i=0;i<strip.numPixels();i++){
-        //currentColors[i] = [random(256),random(256),random(256)];
         finalColors[i][0] = random(256);
         finalColors[i][1] = random(256);
         finalColors[i][2] = random(256);
     }
 }
 
-void setColors(){
+void setStripColors(){
     uint16_t i;
-    for(i=0,i<strip.numPixels();i++){
-        strip.setPixelColor(i,)
+    
+    for(i=0;i<strip.numPixels();i++){           //for each pixel
+        strip.setPixelColor(i,currentColors[i][0],currentColors[i][1],currentColors[i][2]);     //set the color
     }
 }
 
@@ -138,6 +147,3 @@ uint32_t Wheel(byte WheelPos) {
    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
 }
-
-
-
