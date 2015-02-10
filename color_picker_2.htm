@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Color Picker v0.1</title>
+    <title>Color Picker v0.2</title>
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -20,7 +20,7 @@
   <body>
 
     <div class="container">
-      <h1>Color Picker v0.1</h1>
+      <h1>Color Picker v0.2</h1>
 
       
         <div class="row settings">
@@ -91,8 +91,8 @@
               <h2>Scheme</h2>
               <p>Play on colors</p>
 
-              <label for="schemeSeed">Seed Color</label>
-              <input id="schemeSeed" type="text" value="000"  class="pick-a-color form-control"><input type="button" class="btn btn-default" value="Save" />
+              <label for="seedColor">Seed Color</label>
+              <input id="seedColor" type="text" value="000"  class="pick-a-color form-control"><input type="button" class="btn btn-default" value="Save" />
 
               <form class="form-inline">
               </form>
@@ -168,60 +168,41 @@
     $(document).ready(function(){
       console.log("DOM ready");
 
-
-      
-
       //scheme initiation
       var numberLeds = 10;
-      var LEDColors = [];
-      var tempLEDColorH = tempLEDColorS = tempLEDColorL = 0;
-      var schemeSeed = "#000";
+      var LEDColors = new Array(numberLeds);
+      var randomAmount = 5;
+      var seedColor = tinycolor("red");
 
-      for (var i = 0; i < numberLeds; i++) {
-        tempLEDColorH = Math.floor((Math.random() * 361));
-        tempLEDColorS = .5; //Math.floor((Math.random() * 101));
-        tempLEDColorL = .5; //Math.floor((Math.random() * 101));
+      //fill array with the seed color
+      LEDColors[0] = tinycolor(seedColor);
+      for (i=1;i<numberLeds;i++){
+        LEDColors[i] = tinycolor(seedColor);
+        $("div#scheme form").append("<span class='colorBlock'> loading </span>");
+      }
+      updateScheme();
 
-        LEDColors[i] = [tempLEDColorH, tempLEDColorS, tempLEDColorL];
-
-        $("div#scheme form").append("<span class='colorBlock'>" + buildHSLString(LEDColors[i][0],LEDColors[i][1],LEDColors[i][2]) + "</span>").css("background-color", color.toHexString());
-        
-      };
-
+      //when you click Save ... save the seed color and generate a bunch of new variations
       $("div#scheme input[type='button']").click(function(){
-        schemeSeed = tinycolor($("div#scheme input#schemeSeed").val());
-        
-        console.log("Scheme Seed Color = " + schemeSeed.toHsl());
-        
-        LEDColors[0][0] = schemeSeed.toHsl().h;
-        LEDColors[0][1] = schemeSeed.toHsl().s;
-        LEDColors[0][2] = schemeSeed.toHsl().l;
-
-        console.log(LEDColors[0]);
-
-        variations(10);
+        LEDColors[0] = tinycolor($("div#scheme input.seedColor").val());
+        variations();
         updateScheme();
+
       });
 
-      function randomScheme(){
-        for (var i = 0; i < numberLeds; i++) {
-          tempLEDColorH = Math.floor((Math.random() * 361));
-          tempLEDColorS = Math.floor((Math.random() * 101));
-          tempLEDColorL = Math.floor((Math.random() * 101));
 
-          LEDColors[i] = [tempLEDColorH, tempLEDColorS, tempLEDColorL];
-          };
-      }
-
-      function variations(randomAmount){
-        var count = LEDColors.length;
-        //test for definition of randomAmount or set reasonable default
-
+      function variations(){
+        var tempH = tempS = tempL = 0;
         //loop through color array skipping the first color (seed color)
-        for (i=1;i<count;i++){
-          LEDColors[i][0] = LEDColors[0][0] + (((Math.random() * 2) -1) * randomAmount);
-          LEDColors[i][1] = LEDColors[0][1] + (((Math.random() * 2) -1) * randomAmount/100);
-          LEDColors[i][2] = LEDColors[0][2] + (((Math.random() * 2) -1) * randomAmount/100);
+        for (i=1;i<LEDColors.length;i++){
+          tempH = (LEDColors[0].toHsl().h + (((Math.random() * 2) -1) * randomAmount));
+          tempS = (LEDColors[0].toHsl().s + (((Math.random() * 2) -1) * randomAmount/100));
+          tempL = (LEDColors[0].toHsl().l + (((Math.random() * 2) -1) * randomAmount/100));
+          console.log("LEDColors[0].toHsl().h = " + LEDColors[0].toHsl().h);
+          console.log(tempH);
+          console.log("tempH : " + tempH + ", tempS: " + tempS + ", tempL: " + tempL);
+
+          LEDColors[i] = tinycolor("hsl " + tempH + " " + tempS + " " + tempL);
         }
         console.log(LEDColors);
       }
@@ -229,23 +210,12 @@
 
       function updateScheme(){
         $("div#scheme span.colorBlock").each(function(i){
-          var color = tinycolor("hsl " + LEDColors[i][0] + " " + LEDColors[i][1] + " " + LEDColors[i][2]);
 
-          var stroing = "hsl " + LEDColors[i][0] + " " + LEDColors[i][1] + " " + LEDColors[i][2];
-          console.log("stroing[" + i + "]: " + stroing);
-
-
-          $(this).html(color.toHslString());
-          $(this).css("background-color", color.toHexString());
+          $(this).html(LEDColors[i].toHslString());
+          $(this).css("background-color", LEDColors[i].toHexString());
         });
       }
 
-      function buildHSLString (H,S,L){
-        var HSLString = "hsl(" + H + ", " + (S * 100) + "%, " + (L * 100) + "%)";
-
-        return HSLString;
-      }
-      
 
       // Get weather conditions    
       $("div#weather #getConditions").click(function(){
