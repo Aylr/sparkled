@@ -14,9 +14,9 @@
 #define PIXEL_COUNT 21
 #define PIXEL_TYPE WS2812B
 
-unsigned char currentColors[PIXEL_COUNT][3];
-unsigned char initialColors[PIXEL_COUNT][3];
-unsigned char finalColors[PIXEL_COUNT][3];
+byte currentColors[PIXEL_COUNT][3];
+byte initialColors[PIXEL_COUNT][3];
+byte finalColors[PIXEL_COUNT][3];
 
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
@@ -44,14 +44,21 @@ void setup()
 
 void loop() 
 {
-    getRandomFinalColors();   //prepare the next keyframe colors (finalColors)
-    fade(100);                //fade from the inital colors to the final colors
+    //getRandomFinalColors();   //prepare the next keyframe colors (finalColors)
+    //fade(100);                //fade from the inital colors to the final colors
     
     //setStripColors();
     //strip.show();
     //delay(1000);
     
     //rainbow(10);
+    uint8_t i;
+    for(i=0;i<strip.numPixels();i++){
+        strip.setPixelColor(i,67,0,112);
+    }
+    
+    strip.show();
+    delay(2000);
     
     //getRandomFinalColors();
     //fade(1000);
@@ -63,7 +70,7 @@ void loop()
 
 void fade(uint16_t wait){
     uint16_t i;
-    unsigned char deltaColorIncrement[strip.numPixels()][3];
+    int8_t deltaColorIncrement[strip.numPixels()][3];
     int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
     
     //loop through and find the increment for each of the n transition frames
