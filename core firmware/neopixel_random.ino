@@ -29,10 +29,10 @@ void setup()
     //start with some random initial colors
     uint16_t i;
      for(i=0;i<strip.numPixels();i++){
-        initialColors[i][0] = random(256);
-        initialColors[i][1] = random(256);
-        initialColors[i][2] = random(256);
-        
+        initialColors[i][0] = 0; //random(256);
+        initialColors[i][1] = 0; //random(256);
+        initialColors[i][2] = 0; //random(256);
+
         currentColors[i][0] = initialColors[i][0];
         currentColors[i][1] = initialColors[i][1];
         currentColors[i][2] = initialColors[i][2];
@@ -40,18 +40,26 @@ void setup()
     
     setStripColors();           //set the strip colors
     strip.show();               //show the colors
+    
+    getWhiteFinalColors();   //prepare the next keyframe colors (finalColors)
+    fade(100);                //fade from the inital colors to the final colors
+    getBlackFinalColors();
+    fade(100);
 }
 
 void loop() 
 {
-    //getRandomFinalColors();   //prepare the next keyframe colors (finalColors)
-    //fade(100);                //fade from the inital colors to the final colors
+    
+    
+    getRandomFinalColors();
+    fade(100);
     
     //setStripColors();
     //strip.show();
     //delay(1000);
     
     //rainbow(10);
+    /*
     uint8_t i;
     for(i=0;i<strip.numPixels();i++){
         strip.setPixelColor(i,67,0,112);
@@ -59,20 +67,28 @@ void loop()
     
     strip.show();
     delay(2000);
+    */
+    
     
     //getRandomFinalColors();
     //fade(1000);
-    
 
     //randomize(random(10,5000));
 }
 
 
 void fade(uint16_t wait){
-    uint16_t i;
-    int8_t deltaColorIncrement[strip.numPixels()][3];
+    uint16_t i, j;
+    int8_t deltaColorIncrement[strip.numPixels()-1][3];
     int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
     
+    //set intital colors as the current color
+    for(i=0;i<strip.numPixels();i++){
+        initialColors[i][0] = currentColors[i][0];
+        initialColors[i][1] = currentColors[i][1];
+        initialColors[i][2] = currentColors[i][2];
+    }
+
     //loop through and find the increment for each of the n transition frames
     for(i=0;i<strip.numPixels();i++){
         deltaColorIncrement[i][0] = (finalColors[i][0] - initialColors[i][0])/transitionFrames;
@@ -80,14 +96,13 @@ void fade(uint16_t wait){
         deltaColorIncrement[i][2] = (finalColors[i][2] - initialColors[i][2])/transitionFrames;
     }
     
-    //currentColors = initialColors;                  //start with the initialColors
-    
+
     for(i=0;i<transitionFrames;i++){                //for each frame
     
-        for(i=0;i<strip.numPixels();i++){           //for each pixel
-            currentColors[i][0] = currentColors[i][0] + deltaColorIncrement[i][0];          //set new frame r
-            currentColors[i][1] = currentColors[i][1] + deltaColorIncrement[i][1];          //set new frame g
-            currentColors[i][2] = currentColors[i][2] + deltaColorIncrement[i][2];          //set new frame b
+        for(j=0;j<strip.numPixels();j++){           //for each pixel
+            currentColors[j][0] = currentColors[j][0] + deltaColorIncrement[j][0];          //set new frame r
+            currentColors[j][1] = currentColors[j][1] + deltaColorIncrement[j][1];          //set new frame g
+            currentColors[j][2] = currentColors[j][2] + deltaColorIncrement[j][2];          //set new frame b
         }
         
         setStripColors();        //set the colors of the entire strip
@@ -118,6 +133,26 @@ void getRandomFinalColors(){
         finalColors[i][0] = random(256);
         finalColors[i][1] = random(256);
         finalColors[i][2] = random(256);
+    }
+}
+
+void getBlackFinalColors(){
+    uint16_t i;
+    
+    for(i=0;i<strip.numPixels();i++){
+        finalColors[i][0] = 0;//random(256);
+        finalColors[i][1] = 0;//random(256);
+        finalColors[i][2] = 0;//random(256);
+    }
+}
+
+void getWhiteFinalColors(){
+    uint16_t i;
+    
+    for(i=0;i<strip.numPixels();i++){
+        finalColors[i][0] = 255;//random(256);
+        finalColors[i][1] = 255;//random(256);
+        finalColors[i][2] = 255;//random(256);
     }
 }
 
