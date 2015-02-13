@@ -51,9 +51,10 @@ void loop()
 
 
 void fade(uint16_t wait, int transitionFrames){
+    // wait: ms between frames, transitionFrames: number of frames between colors
+
     uint16_t i, j;
     int8_t deltaColorIncrement[strip.numPixels()-1][3];
-    //int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
     
     //set intital colors as the current color
     for(i=0;i<strip.numPixels();i++){
@@ -69,7 +70,6 @@ void fade(uint16_t wait, int transitionFrames){
         deltaColorIncrement[i][2] = (finalColors[i][2] - initialColors[i][2])/transitionFrames;
     }
     
-
     for(i=0;i<transitionFrames;i++){                //for each frame
     
         for(j=0;j<strip.numPixels();j++){           //for each pixel
@@ -78,9 +78,9 @@ void fade(uint16_t wait, int transitionFrames){
             currentColors[j][2] = currentColors[j][2] + deltaColorIncrement[j][2];          //set new frame b
         }
         
-        applyStripColors();        //set the colors of the entire strip
-        strip.show();
-        delay(wait);
+        applyStripColors();         //set the colors of the entire strip
+        strip.show();               //show/display that finished frame
+        delay(wait);                //wait for next frame time
     }
 }
 
@@ -92,15 +92,16 @@ void randomize(uint32_t wait){
         currentColors[i][0] = random(256);
         currentColors[i][1] = random(256);
         currentColors[i][2] = random(256);
-
-        strip.setPixelColor(i,currentColors[i][0],currentColors[i][1],currentColors[i][2]);
+        //strip.setPixelColor(i,currentColors[i][0],currentColors[i][1],currentColors[i][2]);
     }
+    applyStripColors();
     strip.show();
     delay(wait);
 }
 
 void initializeSingleColor(uint8_t r, uint8_t g, uint8_t b){
     uint16_t i;
+
     for(i=0;i<strip.numPixels();i++){
         currentColors[i][0] = initialColors[i][0] = r;
         currentColors[i][1] = initialColors[i][1] = g;
