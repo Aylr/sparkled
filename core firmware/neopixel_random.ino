@@ -24,52 +24,25 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 void setup() 
 {
     strip.begin();
-    strip.show(); // Initialize all pixels to 'off'
+    strip.show(); // initialize all pixels to 'off'
     
-    //start with some random initial colors
-    uint16_t i;
-     for(i=0;i<strip.numPixels();i++){
-        initialColors[i][0] = 0; //random(256);
-        initialColors[i][1] = 0; //random(256);
-        initialColors[i][2] = 0; //random(256);
-
-        currentColors[i][0] = initialColors[i][0];
-        currentColors[i][1] = initialColors[i][1];
-        currentColors[i][2] = initialColors[i][2];
-    }
+    initializeSingleColor(255,0,0);        //start with all LEDS a single color
     
-    setStripColors();           //set the strip colors
-    strip.show();               //show the colors
-    
-    getWhiteFinalColors();   //prepare the next keyframe colors (finalColors)
-    fade(100);                //fade from the inital colors to the final colors
-    getBlackFinalColors();
-    fade(100);
+    getSingleFinalColor(0,255,0);          //prepare the next keyframe colors (finalColors)
+    fade(10,100);                          //fade from the inital colors to the final colors
+    getSingleFinalColor(0,0,255);
+    fade(10,100);
+    getSingleFinalColor(255,255,255);
+    fade(10,100);
 }
 
 void loop() 
 {
-    
-    
     getRandomFinalColors();
-    fade(100);
-    
-    //setStripColors();
-    //strip.show();
-    //delay(1000);
+    fade(10,100);
     
     //rainbow(10);
-    /*
-    uint8_t i;
-    for(i=0;i<strip.numPixels();i++){
-        strip.setPixelColor(i,67,0,112);
-    }
-    
-    strip.show();
-    delay(2000);
-    */
-    
-    
+
     //getRandomFinalColors();
     //fade(1000);
 
@@ -77,10 +50,10 @@ void loop()
 }
 
 
-void fade(uint16_t wait){
+void fade(uint16_t wait, int transitionFrames){
     uint16_t i, j;
     int8_t deltaColorIncrement[strip.numPixels()-1][3];
-    int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
+    //int transitionFrames = 10;                              //how many transitional frames from one keyframe to the next
     
     //set intital colors as the current color
     for(i=0;i<strip.numPixels();i++){
@@ -105,7 +78,7 @@ void fade(uint16_t wait){
             currentColors[j][2] = currentColors[j][2] + deltaColorIncrement[j][2];          //set new frame b
         }
         
-        setStripColors();        //set the colors of the entire strip
+        applyStripColors();        //set the colors of the entire strip
         strip.show();
         delay(wait);
     }
@@ -126,6 +99,26 @@ void randomize(uint32_t wait){
     delay(wait);
 }
 
+void initializeSingleColor(uint8_t r, uint8_t g, uint8_t b){
+    uint16_t i;
+    for(i=0;i<strip.numPixels();i++){
+        currentColors[i][0] = initialColors[i][0] = r;
+        currentColors[i][1] = initialColors[i][1] = g;
+        currentColors[i][2] = initialColors[i][2] = b;
+    }
+    applyStripColors();           //set the strip colors
+    strip.show();               //show the colors
+}
+
+void getSingleFinalColor(uint8_t r, uint8_t g, uint8_t b){
+    uint16_t i;
+    for(i=0;i<strip.numPixels();i++){
+        finalColors[i][0] = r;
+        finalColors[i][1] = g;
+        finalColors[i][2] = b;
+    }
+}
+
 void getRandomFinalColors(){
     uint16_t i;
     
@@ -136,27 +129,7 @@ void getRandomFinalColors(){
     }
 }
 
-void getBlackFinalColors(){
-    uint16_t i;
-    
-    for(i=0;i<strip.numPixels();i++){
-        finalColors[i][0] = 0;//random(256);
-        finalColors[i][1] = 0;//random(256);
-        finalColors[i][2] = 0;//random(256);
-    }
-}
-
-void getWhiteFinalColors(){
-    uint16_t i;
-    
-    for(i=0;i<strip.numPixels();i++){
-        finalColors[i][0] = 255;//random(256);
-        finalColors[i][1] = 255;//random(256);
-        finalColors[i][2] = 255;//random(256);
-    }
-}
-
-void setStripColors(){
+void applyStripColors(){
     uint16_t i;
     
     for(i=0;i<strip.numPixels();i++){           //for each pixel
