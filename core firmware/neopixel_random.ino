@@ -17,12 +17,23 @@
 byte currentColors[PIXEL_COUNT][3];
 byte initialColors[PIXEL_COUNT][3];
 byte finalColors[PIXEL_COUNT][3];
+byte httpRGB[3];
+byte incomingR;
+byte incomingG;
+byte incomingB;
 
+
+//int parse(String inputString);
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
 void setup() 
 {
+    Spark.function("rgb", parse);
+    httpRGB[0] = 0;
+    httpRGB[1] = 255;
+    httpRGB[2] = 0;
+    
     strip.begin();
     strip.show(); // initialize all pixels to 'off'
     
@@ -49,6 +60,33 @@ void loop()
     //randomize(random(10,5000));
 }
 
+int parse(String inputString){
+    char * temp = new char[inputString.length()+1];
+    char * tok;
+
+    tok = strtok(temp,",");
+    byte i = 0;
+
+    while (tok!=NULL){
+        httpRGB[i] = atoi(tok);
+        tok = strtok(NULL, ",");
+        i++;
+    }
+/*
+    incomingR = atoi(tok);
+    tok = strtok(NULL, ",");
+    incomingG = atoi(tok);
+    tok = strtok(NULL, ",");
+    incomingB = atoi(tok);
+*/
+    //getSingleFinalColor(incomingR,incomingG,incomingB);
+    getSingleFinalColor(httpRGB[0],httpRGB[1],httpRGB[2]);
+
+    fade(10,100);
+    delay(1000);
+    //return 1;
+    return httpRGB[1];
+}
 
 void fade(uint16_t wait, int transitionFrames){
     // wait: ms between frames, transitionFrames: number of frames between colors
