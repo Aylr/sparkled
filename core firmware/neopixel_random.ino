@@ -18,10 +18,6 @@ byte currentColors[PIXEL_COUNT][3];
 byte initialColors[PIXEL_COUNT][3];
 byte finalColors[PIXEL_COUNT][3];
 byte httpRGB[3];
-byte incomingR;
-byte incomingG;
-byte incomingB;
-
 
 //int parse(String inputString);
 
@@ -53,20 +49,12 @@ void loop()
     fade(10,100);
     
     //rainbow(10);
-
-    //getRandomFinalColors();
-    //fade(1000);
-
     //randomize(random(10,5000));
 }
 
 int parse(String inputString){
-    // something bad is happening here. It appears the data is not getting
-    // converted properly.
-    // IE if you set the initial httpRGB val in setup, the url will change
-    // it to that initial color, but not the given url color
-    char * temp = new char[inputString.length()+1];
-    inputString.toCharArray(temp,inputString.length()+1);
+    char * temp = new char[inputString.length()+1];     // make a new character array the length of the input string
+    inputString.toCharArray(temp,inputString.length()+1);   //copy the string to the character array
     char * tok;
 
     tok = strtok(temp,",");
@@ -77,34 +65,26 @@ int parse(String inputString){
         tok = strtok(NULL, ",");
         i++;
     }
-/*
-    incomingR = atoi(tok);
-    tok = strtok(NULL, ",");
-    incomingG = atoi(tok);
-    tok = strtok(NULL, ",");
-    incomingB = atoi(tok);
-*/
-    //getSingleFinalColor(incomingR,incomingG,incomingB);
 
     // Tracking down the problem which does not exist when setting the colors
     // statically without the fade(). Which means the problem lies in the
     // fade() math, which is not a surprise given the int/float/ negative
     // situation. 
     getSingleFinalColor(httpRGB[0],httpRGB[1],httpRGB[2]);
-    applySingleStripColor();
-    strip.show();
+    //applySingleStripColor();
+    //strip.show();
 
-    //fade(10,100);
-    delay(5000);
+    fade(10,100);
+    delay(2000);
     
-    return httpRGB[2];
+    return httpRGB[0];      //return the R value.
 }
 
-void fade(uint16_t wait, int transitionFrames){
+void fade(int wait, int transitionFrames){
     // wait: ms between frames, transitionFrames: number of frames between colors
 
-    uint16_t i, j;
-    int8_t deltaColorIncrement[strip.numPixels()-1][3];
+    int i, j;
+    byte deltaColorIncrement[strip.numPixels()-1][3];
     
     //set intital colors as the current color
     for(i=0;i<strip.numPixels();i++){
@@ -115,14 +95,16 @@ void fade(uint16_t wait, int transitionFrames){
 
     //loop through and find the increment for each of the n transition frames
     for(i=0;i<strip.numPixels();i++){
+        //                         = (255 - 33)/10 = 22.2 = 22w
         deltaColorIncrement[i][0] = (finalColors[i][0] - initialColors[i][0])/transitionFrames;
         deltaColorIncrement[i][1] = (finalColors[i][1] - initialColors[i][1])/transitionFrames;
         deltaColorIncrement[i][2] = (finalColors[i][2] - initialColors[i][2])/transitionFrames;
     }
     
-    for(i=0;i<transitionFrames;i++){                //for each frame
+    for(i=0;i<transitionFrames;i++){                //for each frame (less one for the final colors)
     
         for(j=0;j<strip.numPixels();j++){           //for each pixel
+            //                      25 + 22 = 48
             currentColors[j][0] = currentColors[j][0] + deltaColorIncrement[j][0];          //set new frame r
             currentColors[j][1] = currentColors[j][1] + deltaColorIncrement[j][1];          //set new frame g
             currentColors[j][2] = currentColors[j][2] + deltaColorIncrement[j][2];          //set new frame b
@@ -161,7 +143,7 @@ void initializeSingleColor(uint8_t r, uint8_t g, uint8_t b){
     strip.show();               //show the colors
 }
 
-void getSingleFinalColor(uint8_t r, uint8_t g, uint8_t b){
+void getSingleFinalColor(byte r, byte g, byte b){       // set all pixels to a single final color
     uint16_t i;
     for(i=0;i<strip.numPixels();i++){
         finalColors[i][0] = r;
@@ -170,7 +152,7 @@ void getSingleFinalColor(uint8_t r, uint8_t g, uint8_t b){
     }
 }
 
-void getRandomFinalColors(){
+void getRandomFinalColors(){                            // set each pixel final color randomly
     uint16_t i;
     
     for(i=0;i<strip.numPixels();i++){
@@ -180,7 +162,7 @@ void getRandomFinalColors(){
     }
 }
 
-void applyStripColors(){
+void applyStripColors(){                                // take the currentColors and set them to the strip ready for show
     uint16_t i;
     
     for(i=0;i<strip.numPixels();i++){           //for each pixel
