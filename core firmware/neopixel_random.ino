@@ -61,7 +61,12 @@ void loop()
 }
 
 int parse(String inputString){
+    // something bad is happening here. It appears the data is not getting
+    // converted properly.
+    // IE if you set the initial httpRGB val in setup, the url will change
+    // it to that initial color, but not the given url color
     char * temp = new char[inputString.length()+1];
+    inputString.toCharArray(temp,inputString.length()+1);
     char * tok;
 
     tok = strtok(temp,",");
@@ -80,12 +85,19 @@ int parse(String inputString){
     incomingB = atoi(tok);
 */
     //getSingleFinalColor(incomingR,incomingG,incomingB);
-    getSingleFinalColor(httpRGB[0],httpRGB[1],httpRGB[2]);
 
-    fade(10,100);
-    delay(1000);
-    //return 1;
-    return httpRGB[1];
+    // Tracking down the problem which does not exist when setting the colors
+    // statically without the fade(). Which means the problem lies in the
+    // fade() math, which is not a surprise given the int/float/ negative
+    // situation. 
+    getSingleFinalColor(httpRGB[0],httpRGB[1],httpRGB[2]);
+    applySingleStripColor();
+    strip.show();
+
+    //fade(10,100);
+    delay(5000);
+    
+    return httpRGB[2];
 }
 
 void fade(uint16_t wait, int transitionFrames){
@@ -173,6 +185,14 @@ void applyStripColors(){
     
     for(i=0;i<strip.numPixels();i++){           //for each pixel
         strip.setPixelColor(i,currentColors[i][0],currentColors[i][1],currentColors[i][2]);     //set the color
+    }
+}
+
+void applySingleStripColor(){
+    uint16_t i;
+    
+    for(i=0;i<strip.numPixels();i++){           //for each pixel
+        strip.setPixelColor(i,finalColors[i][0],finalColors[i][1],finalColors[i][2]);     //set the color
     }
 }
 
