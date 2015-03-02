@@ -20,14 +20,18 @@
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
-int16_t httpRGB[3];
+int16_t httpRGB[6];
+byte gradient[PIXEL_COUNT][3];
 
 void setup() 
 {
+	Spark.subscribe("sms", handler);
+
     Spark.function("rgb", parse);
     Spark.function("off", offAPI);
-    Spark.function("rainbow", rainbowAPI);
+    //Spark.function("rainbow", rainbowAPI);
     Spark.function("fuzz", policeAPI);
+    Spark.function("gradient", gradientAPI);
 
     Serial.begin(9600);
     strip.begin();
@@ -37,12 +41,46 @@ void setup()
     off();
 }
 
-
-void loop() 
-{
-    
+void loop() {
 }
 
+void handler(const char *event, const char *data){
+	policeAPI("junk");
+}
+
+
+void makeGradient(byte r0, byte g0, byte b0, byte r1, byte g1, byte b1){
+	float deltaR = ((r1-r0)/(PIXEL_COUNT-1));			// calculate deltas per pixel per color
+	float deltaG = ((g1-g0)/(PIXEL_COUNT-1));
+	float deltaB = ((b1-b0)/(PIXEL_COUNT-1));
+
+	for(int i=0;i<PIXEL_COUNT;i++){						// set each pixel
+		strip.setPixelColor(i,round(r0+(i*deltaR)),round(g0+(i*deltaG)),round(b0+(i*deltaB)));
+	}
+	strip.setPixelColor(0,r0,g0,b0);					// set the first and last pixel to workaround
+	strip.setPixelColor(PIXEL_COUNT-1,r1,g1,b1);		// the rounding error
+	strip.show();
+}
+
+int gradientAPI(String inputString){
+    Serial.print("API :: Data received: ");
+    char * temp = new char[inputString.length()+1];     // make a new character array the length of the input string
+    inputString.toCharArray(temp,inputString.length()+1);   //copy the string to the character array
+    char * tok;
+
+    tok = strtok(temp,",");
+    byte i = 0;
+
+    while (tok!=NULL){
+        httpRGB[i] = atoi(tok);
+        tok = strtok(NULL, ",");
+        i++;
+    }
+
+    makeGradient(httpRGB[0],httpRGB[1],httpRGB[2],httpRGB[3],httpRGB[4],httpRGB[5]);
+    
+    return httpRGB[0] + httpRGB[1] + httpRGB[2];      //return the RGB total value.
+}
 
 int rainbowAPI(String inputString){
     uint32_t originalColor = strip.getPixelColor(0);        // save the original color for after the rainbow
@@ -65,11 +103,13 @@ int policeAPI(String inputString){
             singleColor(255,0,0);
             delay(100);
             off();
+            delay(50);
         }
         for(int i=0;i<4;i++){
             singleColor(0,0,255);
             delay(100);
             off();
+            delay(50);
         }
     }
     
