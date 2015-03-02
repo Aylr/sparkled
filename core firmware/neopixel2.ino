@@ -20,8 +20,7 @@
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
-int16_t httpRGB[6];
-byte gradient[PIXEL_COUNT][3];
+int16_t httpRGB[6];					// used to hold 2 rgb values from the web API
 
 void setup() 
 {
