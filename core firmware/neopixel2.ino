@@ -24,9 +24,10 @@ int16_t httpRGB[6];					// used to hold 2 rgb values from the web API
 
 void setup() 
 {
-	Spark.subscribe("sms", handler);
+	//Spark.subscribe("fuzz", handler);
 
-    Spark.function("rgb", parse);
+    //Spark.function("rgb", rgbAPI);
+    Spark.function("generic", generic);
     Spark.function("off", offAPI);
     //Spark.function("rainbow", rainbowAPI);
     Spark.function("fuzz", policeAPI);
@@ -43,12 +44,41 @@ void setup()
 void loop() {
 }
 
-void handler(const char *event, const char *data){
-	policeAPI("junk");
+
+int generic(String inputString){
+	String trimmedInputString = inputString.substring(1);	// trim off first charcter
+
+	switch (inputString.substring(0,1).toInt()){			// switch based on first character
+		case 0:
+			off();
+			return 0;
+			break;
+		case 1:
+			rgbAPI(trimmedInputString);
+			return 1;
+			break;
+		case 2:
+			gradientAPI(trimmedInputString);
+			return 2;
+			break;
+		case 3:
+			rainbowAPI(trimmedInputString);
+			return 3;
+			break;
+		case 4:
+			policeAPI(trimmedInputString);
+			return 4;
+			break;
+		default:
+			return -1;
+			break;
+	}
 }
 
 
 void makeGradient(byte r0, byte g0, byte b0, byte r1, byte g1, byte b1){
+	// This takes two RGB colors and makes a nice gradient along the
+	// length of the strip transitioning from the first to the last.
 	float deltaR = ((r1-r0)/(PIXEL_COUNT-1));			// calculate deltas per pixel per color
 	float deltaG = ((g1-g0)/(PIXEL_COUNT-1));
 	float deltaB = ((b1-b0)/(PIXEL_COUNT-1));
@@ -61,9 +91,9 @@ void makeGradient(byte r0, byte g0, byte b0, byte r1, byte g1, byte b1){
 	strip.show();
 }
 
-int gradientAPI(String inputString){
-    Serial.print("API :: Data received: ");
-    char * temp = new char[inputString.length()+1];     // make a new character array the length of the input string
+int APIDataToIntArray(String inputString){
+	int tempNumberDataPointsReceived = 0;					// used to keep track of how many numbers we get from the API
+    char * temp = new char[inputString.length()+1];     	// make a new character array the length of the input string
     inputString.toCharArray(temp,inputString.length()+1);   //copy the string to the character array
     char * tok;
 
@@ -71,14 +101,34 @@ int gradientAPI(String inputString){
     byte i = 0;
 
     while (tok!=NULL){
+    	tempNumberDataPointsReceived ++;
         httpRGB[i] = atoi(tok);
         tok = strtok(NULL, ",");
         i++;
     }
 
-    makeGradient(httpRGB[0],httpRGB[1],httpRGB[2],httpRGB[3],httpRGB[4],httpRGB[5]);
-    
-    return httpRGB[0] + httpRGB[1] + httpRGB[2];      //return the RGB total value.
+    Serial.print("APIDataToIntArray :: Total API numbers received: ");
+    Serial.println(tempNumberDataPointsReceived);
+
+    return tempNumberDataPointsReceived;					// useful to know how many values in the array are good
+}
+
+int gradientAPI(String inputString){
+	// This function takes a string of presumably rgb values IE "255,255,255,0,0,0"
+	// from the web API, parses it into integers and enacts the gradient
+	// Bonus: if < 6 rgb values are detected, the function makes a random gradient
+
+    int numReceived = APIDataToIntArray(inputString);		// run APIDataToIntArray to get the rgb values from the API and
+    														// it returns the total number of them (6 for a valid gradient)
+    if(numReceived == 6){
+	    makeGradient(httpRGB[0],httpRGB[1],httpRGB[2],httpRGB[3],httpRGB[4],httpRGB[5]);
+	    Serial.print("gradientAPI :: Success!");
+	    return 1;
+	}else{
+		Serial.print("gradientAPI :: Not enough values given, making random");
+		makeGradient(random(256),random(256),random(256),random(256),random(256),random(256));
+		return 2;
+	}
 }
 
 int rainbowAPI(String inputString){
@@ -122,34 +172,22 @@ int offAPI(String junk){
     return 0;
 }
 
+int rgbAPI(String inputString){
+	// Takes a string of data from the web API, parses it and displays the rgb color.
+	// Bonus: if not enough integers are detected, makes a random color.
 
-int parse(String inputString){
-    Serial.print("API :: Data received: ");
-    char * temp = new char[inputString.length()+1];     // make a new character array the length of the input string
-    inputString.toCharArray(temp,inputString.length()+1);   //copy the string to the character array
-    char * tok;
-
-    tok = strtok(temp,",");
-    byte i = 0;
-
-    while (tok!=NULL){
-        httpRGB[i] = atoi(tok);
-        tok = strtok(NULL, ",");
-        i++;
-    }
-    
-    Serial.print("R: ");
-    Serial.print(httpRGB[0]);
-    Serial.print(" G: ");
-    Serial.print(httpRGB[1]);
-    Serial.print(" B: ");
-    Serial.println(httpRGB[2]);
-
-    singleColor(httpRGB[0],httpRGB[1],httpRGB[2]);
-    
-    return httpRGB[0] + httpRGB[1] + httpRGB[2];      //return the RGB total value.
+    int numReceived = APIDataToIntArray(inputString);		// run APIDataToIntArray to get the rgb values from the API and
+    														// it returns the total number of them (6 for a valid gradient)
+    if(numReceived == 3){
+	    singleColor(httpRGB[0],httpRGB[1],httpRGB[2]);
+	    Serial.print("singleColorAPI :: Success!");
+	    return 1;
+	}else{
+		Serial.print("singleColorAPI :: Not enough values given: Random!");
+		singleColor(random(256),random(256),random(256));
+		return 2;
+	}
 }
-
 
 int off(){
     Serial.println("turning off...");
@@ -159,7 +197,6 @@ int off(){
     strip.show();
     return 0;
 }
-
 
 void singleColor(uint8_t r, uint8_t g, uint8_t b){
     Serial.print("singleColor R: ");
@@ -182,7 +219,6 @@ void singleColor32(uint32_t color){
     strip.show();
 }
 
-
 void rainbow(uint8_t wait) {
 	uint16_t i, j;
 
@@ -194,7 +230,6 @@ void rainbow(uint8_t wait) {
 		delay(wait);
 	}
 }
-
 
 uint32_t Wheel(byte WheelPos) {
 	// Input a value 0 to 255 to get a color value.
