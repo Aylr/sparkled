@@ -1,37 +1,28 @@
 #include "application.h"
 //#include "spark_disable_wlan.h" (for faster local debugging only)
-//#include "neopixel/neopixel.h"
-
-// IMPORTANT: Set pixel COUNT, PIN and TYPE
-#define PIXEL_PIN D0
-#define PIXEL_COUNT 21
-#define PIXEL_TYPE WS2812B
-
-//Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
-
-#include "application.h"
-//#include "spark_disable_wlan.h" (for faster local debugging only)
 #include "neopixel/neopixel.h"
 
 // IMPORTANT: Set pixel COUNT, PIN and TYPE
 #define PIXEL_PIN D0
-#define PIXEL_COUNT 21
+#define PIXEL_COUNT 4
 #define PIXEL_TYPE WS2812B
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, PIXEL_TYPE);
 
 int16_t httpRGB[6];					// used to hold 2 rgb values from the web API
+int mode = 0;
+uint32_t stripColors32[PIXEL_COUNT];
+char APIStripColors32[200] = "Rebooted";
 
 void setup() 
 {
-	//Spark.subscribe("fuzz", handler);
-
-    //Spark.function("rgb", rgbAPI);
     Spark.function("generic", generic);
     Spark.function("off", offAPI);
-    //Spark.function("rainbow", rainbowAPI);
     Spark.function("fuzz", policeAPI);
     Spark.function("gradient", gradientAPI);
+
+    Spark.variable("mode", &mode, INT);
+    Spark.variable("state", &APIStripColors32, STRING);
 
     Serial.begin(9600);
     strip.begin();
@@ -44,37 +35,136 @@ void setup()
 void loop() {
 }
 
+extern char* itoa(int a, char* buffer, unsigned char radix);
+
+void updateAPIStripColors32(){
+	// This function gets the current colors of the strip and 
+	// populates the stripColors32[] array
+
+	char buffer[10];		//buffer for itoa
+
+	getColors32();			// get current strip colors and populate stripColors32
+	strcpy(APIStripColors32,""); // blank out existing string
+
+	for(int i=0;i<strip.numPixels();i++){
+		strcat(APIStripColors32,itoa(stripColors32[i],buffer,10));	// convert the int to an 
+		if(i < strip.numPixels()-1){		// don't put a comma at the last one
+			strcat(APIStripColors32,",");
+		}
+	}
+}
+
 
 int generic(String inputString){
+	byte tempReturn;
 	String trimmedInputString = inputString.substring(1);	// trim off first charcter
 
 	switch (inputString.substring(0,1).toInt()){			// switch based on first character
 		case 0:
 			off();
-			return 0;
+			Spark.publish("mode", "off");
+			tempReturn = 0;
 			break;
 		case 1:
 			rgbAPI(trimmedInputString);
-			return 1;
+			Spark.publish("mode", "rgb");
+			tempReturn = 1;
 			break;
 		case 2:
 			gradientAPI(trimmedInputString);
-			return 2;
+			Spark.publish("mode", "gradient");
+			tempReturn = 2;
 			break;
 		case 3:
 			rainbowAPI(trimmedInputString);
-			return 3;
+			Spark.publish("mode", "rainbow");
+			tempReturn = 3;
 			break;
 		case 4:
 			policeAPI(trimmedInputString);
-			return 4;
+			Spark.publish("mode", "fuzz");
+			tempReturn = 4;
+			break;
+		case 5:
+			sunsetAPI(trimmedInputString);
+			Spark.publish("mode", "sunset");
+			tempReturn = 5;
+			break;
+		case 6:
+			animateShiftingAPI(trimmedInputString);
+			Spark.publish("mode", "animate :: shifting");
+			tempReturn = 6;
+			break;
+		case 7:
+			setSinglePixelAPI(trimmedInputString);
+			Spark.publish("mode", "single pixel set");
+			tempReturn = 7;
 			break;
 		default:
-			return -1;
+			tempReturn = -1;
 			break;
+	}
+	updateAPIStripColors32();	// set the spark variable string with strip colors
+	mode = tempReturn;	// update the current spark variable mode
+	return tempReturn;	// return with the mode number
+}
+
+void setSinglePixelAPI(String inputString){
+	if(APIDataToIntArray(inputString) == 4){	// get values from API parser
+												// IE if there aren't 4 values, don't do anything.
+		strip.setPixelColor(httpRGB[0],	httpRGB[1],	httpRGB[2],	httpRGB[3]);
+		strip.show();
 	}
 }
 
+/*
+void setRandomPixelsAPI(String inputString){
+	setRandomPixels();
+}
+*/
+
+void animateShiftingAPI(String inputString){
+	uint32_t tempPixelColor;
+	int loops = 1;								// defaults if none specified via API
+	int frameTime = 50;
+
+	if(APIDataToIntArray(inputString) == 2){	// get values from API parser
+		frameTime = httpRGB[0];
+		loops = httpRGB[1];
+	}
+	
+	for(int k=0;k<loops;k++){					// run complete cycle n number of times
+		for(int j=0;j<strip.numPixels();j++){			// run shift loop entire length of strip cycling back to original
+			getColors32();
+			tempPixelColor = stripColors32[0];			// save the first pixel
+			for(int i=0;i<strip.numPixels();i++){		// shift pixel array
+				stripColors32[i] = stripColors32[i+1];
+			}
+			stripColors32[strip.numPixels()-1] = tempPixelColor;	// set last pixel to the saved first one
+			setMultipleColors32();									// apply shifted colors
+			delay(frameTime);			// wait for next frame
+		}
+	}
+}
+
+void sunsetAPI(String inputString){
+	int numReceived = APIDataToIntArray(inputString);
+
+	if(numReceived == 1){
+		sunset(httpRGB[0]);
+	}else{
+		sunset(20);
+	}
+}
+
+void sunset(int time){
+	for(int i=0;i<255;i++){
+		strip.setBrightness(255-i);
+		strip.show();
+		delay(time);
+	}
+	off();
+}
 
 void makeGradient(byte r0, byte g0, byte b0, byte r1, byte g1, byte b1){
 	// This takes two RGB colors and makes a nice gradient along the
@@ -132,7 +222,7 @@ int gradientAPI(String inputString){
 }
 
 int rainbowAPI(String inputString){
-    uint32_t originalColor = strip.getPixelColor(0);        // save the original color for after the rainbow
+    getColors32();		// save the original colors for after the rainbow
     
     Serial.println("API :: rainbow");
     
@@ -140,14 +230,14 @@ int rainbowAPI(String inputString){
         rainbow(10);
     }
     
-    singleColor32(originalColor);                           // go back to the original color
+    setMultipleColors32();			// go back to the original colors
     return 0;
 }
 
 int policeAPI(String inputString){
-    uint32_t originalColor = strip.getPixelColor(0);        // save the original color for after the rainbow
+    getColors32();		// save the original colors for after the rainbow
 
-    for(int j=0;j<10;j++){
+    for(int j=0;j<2;j++){
         for(int i=0;i<4;i++){
             singleColor(255,0,0);
             delay(100);
@@ -161,8 +251,7 @@ int policeAPI(String inputString){
             delay(50);
         }
     }
-    
-    singleColor32(originalColor);                           // go back to the original color
+    setMultipleColors32();			// go back to the original colors
     return 0;
 }
 
@@ -195,6 +284,7 @@ int off(){
         strip.setPixelColor(i,0,0,0);
     }
     strip.show();
+    mode = 0;
     return 0;
 }
 
@@ -212,11 +302,31 @@ void singleColor(uint8_t r, uint8_t g, uint8_t b){
     strip.show();
 }
 
-void singleColor32(uint32_t color){
+void setSingleColor32(uint32_t color){
+	// sets entire strip 1 color
+
     for(int i=0;i<strip.numPixels();i++){
         strip.setPixelColor(i,color);
     }
     strip.show();
+}
+
+void setMultipleColors32(){
+	// sets the strip according to stripColors32[] array
+
+	for(int i=0;i<strip.numPixels();i++){
+		strip.setPixelColor(i,stripColors32[i]);
+	}
+	strip.show();
+}
+
+void getColors32(){	
+	// simple function that fills up the stripColors32[] array
+	// with the current colors in 32 bit merged format
+
+	for(int i=0;i<strip.numPixels();i++){
+		stripColors32[i] = strip.getPixelColor(i);
+	}
 }
 
 void rainbow(uint8_t wait) {
