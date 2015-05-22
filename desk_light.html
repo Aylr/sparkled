@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DeskLight 0.1</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Pick-A-Color -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/pick-a-color-1.2.3.min.css">
+</head>
+
+<body>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/tinycolor-0.9.15.min.js"></script>
+    <script src="js/pick-a-color-1.2.3.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+        console.log("DOM ready");
+        var alert_timer = null;
+        var baseURL = "https://api.particle.io/v1/devices/";
+        var accessToken = "insert your access token here";
+        var coreID = "insert your coreID here";
+
+        $("#info-alert").alert();
+        $("#info-alert").affix();
+
+        function onMethodSuccess() {
+            alert = $("#info-alert");
+            alert.text("Success!").removeClass("alert-danger").addClass("alert-success");
+            if (alert_timer != null) {
+                clearTimeout(alert_timer);
+                alert.hide();
+                setTimeout(function() {
+                    alert.show();
+                    alert_timer = setTimeout(function() {
+                        alert_timer = null;
+                        alert.hide();
+                    }, 1750);
+                }, 250);
+            } else {
+                alert.show();
+                alert_timer = setTimeout(function() {
+                    alert_timer = null;
+                    alert.hide();
+                }, 2000);
+            }
+        }
+
+        function onMethodFailure(data) {
+            alert = $("#info-alert");
+            alert.text((data) ? "Error! " + data : "Error!").removeClass("alert-success").addClass("alert-danger");
+            if (alert_timer != null) {
+                clearTimeout(alert_timer);
+                alert.hide();
+                setTimeout(function() {
+                    alert.show();
+                    alert_timer = setTimeout(function() {
+                        alert_timer = null;
+                        alert.hide();
+                    }, 1750);
+                }, 250);
+            } else {
+                alert.show();
+                alert_timer = setTimeout(function() {
+                    alert_timer = null;
+                    alert.hide();
+                }, 2000);
+            }
+        }
+
+
+        // The spark API base level run method command
+        function call_spark_api_method(method, data, expected_return_value) {
+            var url = baseURL + coreID + "/" + method;
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: {
+                    access_token: accessToken,
+                    args: data
+                },
+                dataType: "json"
+            }).success(function(obj) {
+                console.log(obj);
+                (obj.hasOwnProperty("return_value") && obj.return_value == expected_return_value) ? onMethodSuccess(): onMethodFailure((obj.error) ? obj.error : "");
+            }).fail(function(obj) {
+                onMethodFailure();
+            });
+        }
+
+        function rgb_obj_to_string(obj, delimiter) {
+            // converts an rbg object to a delimited rgb string
+            // ie {r: 10, g: 100, b: 33} --> "10,100,33"
+            var temp_string = obj.r + delimiter + obj.g + delimiter + obj.b;
+            return temp_string
+        }
+
+        function turn_on_to_color() {
+            var color_raw_input = tinycolor($("input#color").val());
+            var color_rgb_string = rgb_obj_to_string(color_raw_input.toRgb(), ",");
+
+            call_spark_api_method("generic", "1" + color_rgb_string, 1);
+            update_on_off_buttons(1);
+            // console.log("color_rgb_string: " + color_rgb_string);
+        };
+
+        $("a#on").click(function() {
+            turn_on_to_color();
+        });
+        $("input#color").change(function() {
+            turn_on_to_color();
+        });
+
+        $("a#off").click(function() {
+            call_spark_api_method("generic", "0", 0);
+            update_on_off_buttons(0);
+        });
+
+        $("div.animations a").click(function() {
+            call_spark_api_method("generic", $(this).attr("data"), $(this).attr("expected_return"));
+        });
+
+        $("div.preset-colors a").click(function() {
+            var temp_color = new tinycolor($(this).attr("color_data"));
+            var temp_data = rgb_obj_to_string(new tinycolor($(this).attr("color_data")).toRgb(), ",");
+            call_spark_api_method("generic", "1" + temp_data, 1);
+            $("input#color").val(temp_color);
+            update_on_off_buttons(1);
+        });
+
+        function update_on_off_buttons(light_status) {
+            if (light_status == 1) {
+                $("a#on").toggleClass("active", true);
+                $("a#off").toggleClass("active", false);
+            } else {
+                $("a#on").toggleClass("active", false);
+                $("a#off").toggleClass("active", true);
+            }
+
+        };
+
+        $(".pick-a-color").pickAColor({
+            showSpectrum: true,
+            showSavedColors: true,
+            saveColorsPerElement: false,
+            fadeMenuToggle: false,
+            showHexInput: true,
+            showBasicColors: false,
+            allowBlank: false,
+            inlineDropdown: true
+        });
+    });
+    </script>
+    <div class="container">
+        <h1>Status Light v0.1</h1>
+        <div class="row">
+            <div class="column col-md-5">
+                <a href="#" class="btn btn-lg btn-default" id="on"><span class="glyphicon glyphicon-off"></span> On</a>
+                <a href="#" class="btn btn-lg btn-default active" id="off"><span class="glyphicon glyphicon-off"></span> Off</a>
+            </div>
+        </div>
+        <div class="row preset-colors">
+            <div class="column col-md-5">
+                <a href="#" class="btn btn-lg btn-default" id="red" style="color: #ff0000" color_data="ff0000">red</a>
+                <a href="#" class="btn btn-lg btn-default" id="green" style="color: #00ff00" color_data="00ff00">green</a>
+                <a href="#" class="btn btn-lg btn-default" id="blue" style="color: #0000ff" color_data="0000ff">blue</a>
+            </div>
+        </div>
+        <div class="row animations">
+            <div class="column col-md-5">
+                <a href="#" class="btn btn-lg btn-default" id="fuzz" data="4" expected_return="4"><span class="glyphicon glyphicon-warning-sign"></span></a>
+                <a href="#" class="btn btn-lg btn-default" id="rainbow" data="3" expected_return="3"><span class="glyphicon glyphicon-signal"></span></a>
+                <a href="#" class="btn btn-lg btn-default" id="play" data="650,10" expected_return="6"><span class="glyphicon glyphicon-play"></span></a>
+                <a href="#" class="btn btn-lg btn-default" id="gradient" data="2" expected_return="2"><span class="glyphicon glyphicon-random"></span></a>
+            </div>
+        </div>
+        <div class="row" id="solid">
+            <div class="column col-md-4">
+                <h2>Custom Color</h2>
+                <input type="text" value="000" id="color" class="pick-a-color form-control">
+            </div>
+        </div>
+        <div class="alert fade in" id="info-alert" hidden data-spy="affix">Alert</div>
+    </div>
+</body>
+
+</html>
